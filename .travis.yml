@@ -1,14 +1,14 @@
 language: node_js
 node_js:
 - '6'
-before_install:
-- sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
-- git submodule update --init --recursive
 install: npm install
-
 deploy:
 - provider: script
   skip_cleanup: true
   script: npm run deploy
   on:
     branch: master
+env:
+  global:
+  - secure: 9hP5f6yB+7nqgq3qvHM3Cy6BBS7BZk2IQBYPaGa4QD5e4Kg+dVDvvhdqcQZDhH64gX7/DVs14sHIpfoLrhQxHOj9mHy9CqBc/DDgNIQDRCoAL8ZD52MlKi4iLkS8BqTNp8uccs7GGI8jM8nxXUZ47HX96dNYrCDTpcjnKTBeHm73yeruerH9N+7hRx9RapotK0qO/4c0pyDnLKimJsEdaUaytFnFUECUfc42Pto89LiuXwN/NooTn4dY8sMMm4p/4r/PgENZ7i4EKjlc+aWCVgGfXs1aNVBBR8ByT0lYc2bveDEQI/1ra6YFLH88VBGAwtuJjVc9zZO9BBNlHM9YIne2A9YmL+KmYKzCghHJLiIyBCI2Nb+Oz3w6XX298c+cRPLElasp7nwQyYxJUcIT8k18ivJtRsmxgJALlA8f0b9hPxRCZInCH8fEYCjozTaw6Jzg7LCq1jlBk8x/8YF3U1mhsbD2yjiNTqcgnQQikDxyXpoE9OmEVRUtYMYN4rHIkY3iDi5EGapLiW0DzFTw5JYnaJ/4i2AhhbOpGYR6AOPJjVcXPI8c+bSvyB6OgZuRthRtWa0j7kxpDTE/b68CQ9YUbz0Du2owPitD0qrycR3BohB+HEMfrqX3J89694XN+lIrSUqCAdkp6FsdZSkUyi0OY48Yoahse/e1bfV/W84=
+  - secure: a1lisIOhm9iPuUqW2C6wUGVdfQ8919FWN3TkqZ3t7d1IeCjwRhXcxmc3Ajx2ufXZzOqQKi3Zi0o99d8XMbvzima7cN4qlboryXvrBjTBRxz+lu+JoB2Ppj/lG9+OIRKQdHpWl5CWmHw/NDlq/OFDS+r56CqRaOscadzSDplsqE7KpU+Nd9EVAq987w/GUZsn2p17dRTnVr3sKLfGdvMvkZlQntMhVvg9oeZBVjQpa3+i1YSXEd2r2xY8Im/nSCbZB1nf48NGJCyg1uqR/J372Lk4Mja+9kEq9i8R077nT9RV9pbHBLuMMOBu0OygQFXRPV9sVw51s+c/G9WHj1IAF60VMIk2WksEv2UcvQzkpQ8UF1uQvhEbwT2pSyQgJDBHZTWKAwq7jOCJM/SddTqB2agA7lhg5JQsH6A+KP6Zt00zlawvr7MkFSPxI/mDWNJRs+8p7tSaxvh6RIaU+hxaxpGWtkON4bnCl0L3SVp9VqgfXNIhtP5DSDql0hFwc3wxHMkIlu2EK43ddv8eMh9ZZtFD+23f3K1zR/+OpoH6c8V9y7w4ht3JqmHkXaEVSd6+ya+bh8bqeCx+H8/wvsvcK7GaPYvX23Feq20Sd6gdlktcw87X12R9MtmvempFhtj0hY6TDSeSRxV85qis+d5XkxdrPqYIbp3DqBpGcoIwD3A=

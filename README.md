@@ -11,12 +11,7 @@
 3. Setup the needed environments variables in a `.env` file with the following:
 
   ```
-  CRAFT_OWNER=<your_craft_ai_owner>
-  CRAFT_PROJECT=<your_craft_ai_projet>
   CRAFT_TOKEN=<your_craft_ai_write_token>
-
-  REACT_APP_CRAFT_OWNER=<your_craft_ai_owner>
-  REACT_APP_CRAFT_PROJECT=<your_craft_ai_owner>
   REACT_APP_CRAFT_TOKEN=<your_craft_ai_read_token>
   ```
 
@@ -25,16 +20,16 @@
 To recreate the agents from the input data, run:
 
 ```console
-> PERSONA=all npm run start:create_agents
+> PERSONAS=all npm run start:create_agents
 ```
 
-to re-create the agents for all the existing personas, run:
+To re-create the agents for all the existing personas, run:
 
 ```console
-> PERSONA=cadre,student npm run start:create_agents
+> PERSONAS=cadre,student npm run start:create_agents
 ```
 
-to re-create the agents for the given personas (here 'cadre' and 'student').
+To re-create the agents for the given personas (here 'cadre' and 'student').
 
 > :warning: This operations create lots of agents and upload a ton of data, it takes a little while!
 
