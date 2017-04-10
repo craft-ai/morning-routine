@@ -1,0 +1,22 @@
+.Checkbox {
+  color: #555;
+  font-size: 1em;
+}
+
+.Checkbox .rc-checkbox-inner {
+  width: 18px; height: 18px;
+}
+
+.Checkbox .rc-checkbox-inner::after {
+  top: 0;
+  width: 8px; height: 10px;
+  opacity: 0;
+  transition: opacity .2s;
+}
+
+.Checkbox .rc-checkbox-checked .rc-checkbox-inner {
+  border-color: #3876c2;
+  background-color: #3876c2;
+}
+
+.Checkbox .rc-checkbox-checked .rc-checkbox-inner::after { opacity: 1; }

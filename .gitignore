@@ -1,0 +1,6 @@
+.env
+npm-debug.log
+/node_modules/
+/build/
+/gh/
+/data/intermediate/*.csv

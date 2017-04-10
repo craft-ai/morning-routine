@@ -1,0 +1,14 @@
+language: node_js
+node_js:
+- '6'
+before_install:
+- sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
+- git submodule update --init --recursive
+install: npm install
+
+deploy:
+- provider: script
+  skip_cleanup: true
+  script: npm run deploy
+  on:
+    branch: master

@@ -1,0 +1,27 @@
+.Timeline {
+  background-color: #fff;
+  box-shadow: 0 0 15px rgba(0, 0, 0, .2);
+  font-size: 1em;
+}
+
+.Timeline .vis-group { border-bottom: none; }
+
+.Timeline .vis-item {
+  border-color: #3876c2;
+  background-color: #3876c2;
+  color: #fff;
+  line-height: 1;
+}
+
+.Timeline .vis-panel.vis-bottom,
+.Timeline .vis-time-axis.vis-foreground {
+  height: 30px !important;
+  background-color: #ddd;
+  font-weight: 700;
+}
+
+.Timeline .vis-text.vis-minor {
+  padding: 0 5px;
+  line-height: 30px;
+  border-left: 1px solid #ccc;
+}

@@ -1,0 +1,18 @@
+.ListPicker {
+  margin-bottom: 60px;
+}
+
+.ListPicker .rc-slider-rail { background-color: #a0a0a0; }
+
+.ListPicker .rc-slider-dot { border-color: #afafaf; }
+
+.ListPicker .rc-slider-dot-active,
+.ListPicker .rc-slider-handle { border-color: #7ab6ff; }
+
+.ListPicker .rc-slider-mark-text {
+  color: #aaa;
+  transition: color .2s;
+}
+
+.ListPicker .rc-slider-mark-text:hover,
+.ListPicker .rc-slider-mark-text-active { color: #444; }
