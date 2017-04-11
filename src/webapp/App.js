@@ -1,4 +1,6 @@
 const _ = require('lodash');
+const React = require('react');
+const createClass = require('create-react-class');
 const { debug } = require('../utils');
 const {
   retrievePersonaDecisionTrees,
@@ -19,7 +21,6 @@ const Checkbox = require('./Checkbox');
 const constants = require('./constants');
 const ListPicker = require('./ListPicker');
 const PersonaPicker = require('./PersonaPicker');
-const React = require('react');
 const Timeline = require('./Timeline');
 
 const { PERSONA, PROPERTIES, EVENTS, DAYS_OF_WEEK, MONTHS, MORNING_MEETING, VALUES, TIMESTAMPS } = constants;
@@ -40,7 +41,7 @@ function getTime(time) {
   return result;
 }
 
-const App = React.createClass({
+const App = createClass({
   getInitialState() {
     return {
       personas: PERSONA.map(name => ({ name, leafs: null })),

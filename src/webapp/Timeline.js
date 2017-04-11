@@ -1,8 +1,9 @@
 const _ = require('lodash');
+const React = require('react');
+const createClass = require('create-react-class');
 const { debug } = require('../utils');
 const Measure = require('react-measure');
 const moment = require('moment-timezone');
-const React = require('react');
 const vis = require('vis');
 const { ITEMS_CONTENT, ITEMS_TOOLTIP } = require('./constants');
 
@@ -11,7 +12,7 @@ require('./Timeline.css');
 
 const log = debug();
 
-const Timeline = React.createClass({
+const Timeline = createClass({
   getInitialState() {
     return {
       dimensions: {
