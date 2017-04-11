@@ -14,9 +14,12 @@
     "url": "https://github.com/craft-ai/morning-routine.git"
   },
   "scripts": {
+    "build:css": "node-sass src -o src",
+    "watch:css": "npm run build:css && node-sass src -o src --watch --recursive",
     "start:create_agents": "node src/create_agents/main.js",
-    "start:webapp": "react-scripts start",
-    "build:webapp": "react-scripts build",
+    "start:js": "react-scripts start",
+    "start:webapp": "npm-run-all -p watch:css start:js",
+    "build:webapp": "npm run build:css && react-scripts build",
     "deploy": "npm run build:webapp && ./gh-deploy.sh",
     "lint": "eslint .",
     "fix_lint": "eslint --fix ."
@@ -46,6 +49,8 @@
     "eslint": "3.19.0",
     "eslint-config-craft-ai": "2.2.0",
     "eslint-plugin-react": "6.10.3",
+    "node-sass": "4.5.2",
+    "npm-run-all": "4.0.2",
     "react-scripts": "0.9.5"
   },
   "engines": {

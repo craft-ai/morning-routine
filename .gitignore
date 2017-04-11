@@ -4,3 +4,4 @@ npm-debug.log
 /build/
 /gh/
 /data/intermediate/*.csv
+/src/**/*.css
