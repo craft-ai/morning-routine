@@ -15,7 +15,7 @@
   margin: 8px;
   border-radius: 4px;
 
-  background-image: url('./images/default.jpg');
+  background-image: url('../images/default.jpg');
   background-size: cover;
   color: #eee;
   
@@ -47,20 +47,20 @@
   font-size: 1.2em;
 }
 
-.PersonaPicker li.bnl { background-image: url('./images/bnl.png'); }
+.PersonaPicker li.bnl { background-image: url('../images/bnl.png'); }
 
-.PersonaPicker li.cadre { background-image: url('./images/cadre.jpg'); }
+.PersonaPicker li.cadre { background-image: url('../images/cadre.jpg'); }
 
-.PersonaPicker li.cv { background-image: url('./images/cv.png'); }
+.PersonaPicker li.cv { background-image: url('../images/cv.png'); }
 
-.PersonaPicker li.jp { background-image: url('./images/jp.png'); }
+.PersonaPicker li.jp { background-image: url('../images/jp.png'); }
 
-.PersonaPicker li.pc { background-image: url('./images/pc.png'); }
+.PersonaPicker li.pc { background-image: url('../images/pc.png'); }
 
-.PersonaPicker li.prof { background-image: url('./images/prof.jpg'); }
+.PersonaPicker li.prof { background-image: url('../images/prof.jpg'); }
 
-.PersonaPicker li.student { background-image: url('./images/student.jpg'); }
+.PersonaPicker li.student { background-image: url('../images/student.jpg'); }
 
-.PersonaPicker li.vc { background-image: url('./images/vc.png'); }
+.PersonaPicker li.vc { background-image: url('../images/vc.png'); }
 
-.PersonaPicker li.veto { background-image: url('./images/veto.jpg'); }
+.PersonaPicker li.veto { background-image: url('../images/veto.jpg'); }

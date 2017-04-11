@@ -1,11 +1,11 @@
 const _ = require('lodash');
 const React = require('react');
 const createClass = require('create-react-class');
-const { debug } = require('../utils');
+const { debug } = require('../../utils');
 const {
   retrievePersonaDecisionTrees,
   createContext
-} = require('./predictions');
+} = require('../predictions');
 const {
   extractLeafs,
   filterLeafsByContext,
@@ -16,9 +16,9 @@ const {
   filterDeadLeafsAndRules,
   getIntervalsUnion,
   expandContext
-} = require('./decide');
+} = require('../decide');
+const constants = require('../constants');
 const Checkbox = require('./Checkbox');
-const constants = require('./constants');
 const ListPicker = require('./ListPicker');
 const PersonaPicker = require('./PersonaPicker');
 const Timeline = require('./Timeline');
@@ -40,6 +40,8 @@ function getTime(time) {
 
   return result;
 }
+
+require('./App.css');
 
 const App = createClass({
   getInitialState() {

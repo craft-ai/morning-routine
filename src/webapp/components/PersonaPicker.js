@@ -1,7 +1,7 @@
 const React = require('react');
 const _ = require('lodash');
 const classnames = require('classnames');
-const { PERSONA_LABEL } = require('./constants');
+const { PERSONA_LABEL } = require('../constants');
 
 require('./PersonaPicker.css');
 
