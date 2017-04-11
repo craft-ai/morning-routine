@@ -7,8 +7,8 @@
 .Timeline .vis-group { border-bottom: none; }
 
 .Timeline .vis-item {
-  border-color: #3876c2;
-  background-color: #3876c2;
+  border-color: transparent;
+  background-color: #42358d;
   color: #fff;
   line-height: 1;
 }

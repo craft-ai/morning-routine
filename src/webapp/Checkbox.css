@@ -15,8 +15,8 @@
 }
 
 .Checkbox .rc-checkbox-checked .rc-checkbox-inner {
-  border-color: #3876c2;
-  background-color: #3876c2;
+  border-color: #33beb9;
+  background-color: #33beb9;
 }
 
 .Checkbox .rc-checkbox-checked .rc-checkbox-inner::after { opacity: 1; }
