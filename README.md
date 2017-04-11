@@ -1,5 +1,7 @@
 # Morning routine #
 
+[![Build Status](https://img.shields.io/travis/craft-ai/morning-routine/master.svg?style=flat-square)](https://travis-ci.org/craft-ai/morning-routine)
+
 ## Setup ##
 
 1. Install [Node v6 (LTS)](https://nodejs.org/en/download/), and then run:
