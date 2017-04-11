@@ -1,8 +1,9 @@
-const React = require('react');
-const ReactDOM = require('react-dom');
-const App = require('./components/App');
+import React from 'react';
+import ReactDOM from 'react-dom';
 
-require('font-awesome/css/font-awesome.css');
+import App from './components/App';
+
+import 'font-awesome/css/font-awesome.css';
 
 ReactDOM.render(
   <App />,

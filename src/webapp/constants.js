@@ -1,4 +1,4 @@
-const constants = require('../constants');
+import Constants from '../constants';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -6,16 +6,14 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 
 const MORNING_MEETING = {
   None: -1,
-  '08:30': 8+30/60,
-  '08:45': 8+45/60,
+  '08:30': 8 + 30 / 60,
+  '08:45': 8 + 45 / 60,
   '09:00': 9,
-  '09:15': 9+15/60,
-  '09:30': 9+30/60,
-  '09:45': 9+45/60,
+  '09:15': 9 + 15 / 60,
+  '09:30': 9 + 30 / 60,
+  '09:45': 9 + 45 / 60,
   '10:00': 10
 };
-
-const TIMES = new Array(12 * 24).fill(0).map((_, index) => index / 12);
 
 const TIMESTAMPS = {
   DECEMBER: Math.floor(new Date(2016, 12, 12).getTime() / 1000)
@@ -59,13 +57,12 @@ const PERSONA_LABEL = {
   'vc': 'Country Veto'
 };
 
-module.exports = Object.assign({
+export default Object.assign({
   ITEMS_CONTENT,
   ITEMS_TOOLTIP,
   DAYS_OF_WEEK,
   MONTHS,
   MORNING_MEETING,
-  TIMES,
   TIMESTAMPS,
   PERSONA_LABEL
-}, constants);
+}, Constants);

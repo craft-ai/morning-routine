@@ -1,8 +1,8 @@
-const Toggle = require('rc-checkbox');
-const React = require('react');
+import React from 'react';
+import Toggle from 'rc-checkbox';
 
-require('rc-checkbox/assets/index.css');
-require('./Checkbox.css');
+import 'rc-checkbox/assets/index.css';
+import './Checkbox.css';
 
 const Checkbox = ({ title, defaultValue, onChange }) => (
   <label className='Checkbox'>
@@ -14,4 +14,4 @@ const Checkbox = ({ title, defaultValue, onChange }) => (
   </label>
 );
 
-module.exports = Checkbox;
+export default Checkbox;

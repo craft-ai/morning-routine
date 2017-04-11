@@ -1,41 +1,13 @@
 require('dotenv').load();
 
-const _ = require('lodash');
-const debug = require('debug');
-
+import _ from 'lodash';
+import debug from 'debug';
 
 const TIME_SINCE_REGEXP = /^time_since_(.+)$/;
 const TIME_TO_REGEXP = /^time_to_(.+)$/;
 const TIME_LOWER_BOUND = 0;
 const TIME_UPPER_BOUND = 24;
 const TIME_DEFAULT_INTERVAL = [TIME_LOWER_BOUND, TIME_UPPER_BOUND];
-
-function extractLeafs(tree, ...outputs) {
-  const leafs = [];
-
-  const traverse = (tree, rules = []) => {
-    if (Array.isArray(tree)) {
-      // `rules` must not be passed as a reference
-      return tree.forEach(child => traverse(child, [...rules]));
-    }
-
-    const { predicted_value, children, decision_rule } = tree;
-
-    if (decision_rule) {
-      rules.push(decision_rule);
-    }
-
-    if (children) {
-      traverse(children, rules);
-    } else if (predicted_value && outputs.includes(predicted_value)) {
-      leafs.push({ rules, value: predicted_value, confidence: tree.confidence });
-    }
-
-    return leafs;
-  };
-
-  return traverse(tree).sort((a, b) => b.confidence - a.confidence);
-}
 
 function checkRule({ property, operator, operand }, value) {
   switch (operator) {
@@ -55,35 +27,29 @@ function checkRule({ property, operator, operand }, value) {
   }
 }
 
-function filterLeafsByContext(leafs, context) {
-  return leafs.reduce((leaves, leaf) => {
-    const { removeLeaf, rules } = leaf.rules.reduce(({ removeLeaf, rules }, rule) => {
-      if (removeLeaf) {
-        return { removeLeaf };
-      }
-
-      const value = context[rule.property];
-
-      if (value === undefined || value instanceof Function) {
-        // Can't apply the rule, I keep it.
-        rules.push(rule);
-        removeLeaf = false;
-      } else {
-        // Remove the leaf if rule is not checked
-        removeLeaf = !checkRule(rule, value);
-      }
-
-      return { removeLeaf, rules };
-    }, { removeLeaf: false, rules: [] });
-
-    if (!removeLeaf) {
-      // Update the rules, we only keep those we couldn't apply
-      leaf.rules = rules;
-      leaves.push(leaf);
+function groupConditionsByOperator(rules) {
+  return rules.reduce((rules, { property, operator, operand }) => {
+    if (!rules[property]) {
+      rules[property] = {};
     }
 
-    return leaves;
-  }, []);
+    const rule = rules[property];
+
+    if (!rule[operator]) {
+      rule[operator] = [];
+    }
+
+    const conditions = rule[operator];
+
+    // Check if conditions is already grouped
+    if (Array.isArray(operand) && Array.isArray(operand[0])) {
+      conditions.push(...operand);
+    } else {
+      conditions.push(operand);
+    }
+
+    return rules;
+  }, {});
 }
 
 function computeEventsRelativeProperties(leafs, context, computeInterval, regex) {
@@ -114,75 +80,6 @@ function computeEventsRelativeProperties(leafs, context, computeInterval, regex)
 
     return leaf;
   });
-}
-
-function computeTimeSinceEvents(leafs, context) {
-  const computeInterval = ({ operand, operator }, eventTime) => {
-    const value = eventTime + operand / 3600;
-    const interval = [value < 0 ? 0 : value, eventTime];
-
-    return operator === '>=' ? interval : interval.reverse();
-  };
-
-  return computeEventsRelativeProperties(leafs, context, computeInterval, TIME_SINCE_REGEXP);
-}
-
-function computeTimeToEvents(leafs, context) {
-  const computeInterval = ({ operand, operator }, eventTime) => {
-    const value = eventTime - operand / 3600;
-    const interval = [value < 0 ? 0 : value, eventTime];
-
-    return operator === '>=' ? interval.reverse() : interval;
-  };
-
-  return computeEventsRelativeProperties(leafs, context, computeInterval, TIME_TO_REGEXP);
-}
-
-function computePartialDecisions(leafs, context) {
-  return leafs.map(leaf => {
-    leaf.rules = leaf.rules.reduce((rules, rule) => {
-      const compute = context[rule.property];
-
-      if (compute instanceof Function) {
-        const value = compute(rule.operand);
-        
-        if (value && value.length) {
-          rules.push(...value);
-        }
-      } else {
-        rules.push(rule);
-      }
-
-      return rules;
-    }, []);
-
-    return leaf;
-  });
-}
-
-function groupConditionsByOperator(rules) {
-  return rules.reduce((rules, { property, operator, operand }) => {
-    if (!rules[property]) {
-      rules[property] = {};
-    }
-
-    const rule = rules[property];
-
-    if (!rule[operator]) {
-      rule[operator] = [];
-    }
-
-    const conditions = rule[operator];
-
-    // Check if conditions is already grouped
-    if (Array.isArray(operand) && Array.isArray(operand[0])) {
-      conditions.push(...operand);
-    } else {
-      conditions.push(operand);
-    }
-
-    return rules;
-  }, {});
 }
 
 function getOrientedIntervalsIntersection(intervals) {
@@ -246,7 +143,109 @@ function getIntervalsIntersection(conditions) {
   }
 }
 
-function getIntervalsUnion(intervals) {
+export function extractLeafs(tree, ...outputs) {
+  const leafs = [];
+
+  const traverse = (tree, rules = []) => {
+    if (Array.isArray(tree)) {
+      // `rules` must not be passed as a reference
+      return tree.forEach(child => traverse(child, [...rules]));
+    }
+
+    const { predicted_value, children, decision_rule } = tree;
+
+    if (decision_rule) {
+      rules.push(decision_rule);
+    }
+
+    if (children) {
+      traverse(children, rules);
+    } else if (predicted_value && outputs.includes(predicted_value)) {
+      leafs.push({ rules, value: predicted_value, confidence: tree.confidence });
+    }
+
+    return leafs;
+  };
+
+  return traverse(tree).sort((a, b) => b.confidence - a.confidence);
+}
+
+export function filterLeafsByContext(leafs, context) {
+  return leafs.reduce((leaves, leaf) => {
+    const { removeLeaf, rules } = leaf.rules.reduce(({ removeLeaf, rules }, rule) => {
+      if (removeLeaf) {
+        return { removeLeaf };
+      }
+
+      const value = context[rule.property];
+
+      if (value === undefined || value instanceof Function) {
+        // Can't apply the rule, I keep it.
+        rules.push(rule);
+        removeLeaf = false;
+      } else {
+        // Remove the leaf if rule is not checked
+        removeLeaf = !checkRule(rule, value);
+      }
+
+      return { removeLeaf, rules };
+    }, { removeLeaf: false, rules: [] });
+
+    if (!removeLeaf) {
+      // Update the rules, we only keep those we couldn't apply
+      leaf.rules = rules;
+      leaves.push(leaf);
+    }
+
+    return leaves;
+  }, []);
+}
+
+export function computeTimeSinceEvents(leafs, context) {
+  const computeInterval = ({ operand, operator }, eventTime) => {
+    const value = eventTime + operand / 3600;
+    const interval = [value < 0 ? 0 : value, eventTime];
+
+    return operator === '>=' ? interval : interval.reverse();
+  };
+
+  return computeEventsRelativeProperties(leafs, context, computeInterval, TIME_SINCE_REGEXP);
+}
+
+export function computeTimeToEvents(leafs, context) {
+  const computeInterval = ({ operand, operator }, eventTime) => {
+    const value = eventTime - operand / 3600;
+    const interval = [value < 0 ? 0 : value, eventTime];
+
+    return operator === '>=' ? interval.reverse() : interval;
+  };
+
+  return computeEventsRelativeProperties(leafs, context, computeInterval, TIME_TO_REGEXP);
+}
+
+export function computePartialDecisions(leafs, context) {
+  return leafs.map(leaf => {
+    leaf.rules = leaf.rules.reduce((rules, rule) => {
+      const compute = context[rule.property];
+
+      if (compute instanceof Function) {
+        const value = compute(rule.operand);
+        
+        if (value && value.length) {
+          rules.push(...value);
+        }
+      } else {
+        rules.push(rule);
+      }
+
+      return rules;
+    }, []);
+
+    return leaf;
+  });
+}
+
+export function getIntervalsUnion(intervals) {
   return intervals
     .sort(([a], [b]) => a - b)
     .reduce((intervals, current) => {
@@ -262,7 +261,7 @@ function getIntervalsUnion(intervals) {
     }, []);
 }
 
-function mergeRules(leafs) {
+export function mergeRules(leafs) {
   return leafs.map(leaf => {
     let rules = groupConditionsByOperator(leaf.rules);
 
@@ -289,7 +288,7 @@ function mergeRules(leafs) {
   });
 }
 
-function filterDeadLeafsAndRules(leafs) {
+export function filterDeadLeafsAndRules(leafs) {
   return leafs.filter(leaf => {
     const rules = _.reduce(leaf.rules, (rules, rule, property) => {
       rule = _.reduce(rule, (rule, condition, operator) => {
@@ -313,7 +312,7 @@ function filterDeadLeafsAndRules(leafs) {
   });
 }
 
-function expandContext(context, property, leaf) {
+export function expandContext(context, property, leaf) {
   const rules = _.reduce(leaf.rules, (rules, rule, property) => {
     _.forEach(rule, (operand, operator) => {
       if (Array.isArray(operand)) {
@@ -334,15 +333,3 @@ function expandContext(context, property, leaf) {
     }
   });
 }
-
-module.exports = {
-  extractLeafs,
-  filterLeafsByContext,
-  computeTimeSinceEvents,
-  computeTimeToEvents,
-  computePartialDecisions,
-  mergeRules,
-  filterDeadLeafsAndRules,
-  getIntervalsUnion,
-  expandContext
-};

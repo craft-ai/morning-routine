@@ -1,14 +1,18 @@
-const _ = require('lodash');
-const React = require('react');
-const createClass = require('create-react-class');
-const { debug } = require('../../utils');
-const Measure = require('react-measure');
-const moment = require('moment-timezone');
-const vis = require('vis');
-const { ITEMS_CONTENT, ITEMS_TOOLTIP } = require('../constants');
+import React from 'react';
+import _ from 'lodash';
+import createClass from 'create-react-class';
+import Measure from 'react-measure';
+import moment from 'moment-timezone';
+import vis from 'vis';
 
-require('vis/dist/vis.css');
-require('./Timeline.css');
+import constants from '../constants';
+import { debug } from '../../utils';
+
+import 'vis/dist/vis.css';
+import './Timeline.css';
+
+const { ITEMS_CONTENT, ITEMS_TOOLTIP } = constants;
+const { DataSet } = vis;
 
 const log = debug();
 
@@ -26,15 +30,17 @@ const Timeline = createClass({
       dimensions
     });
   },
+  componentWillMount() {
+    this.dom = {
+      timeline: null
+    };
+  },
   componentDidMount() {
     log('Rendering the "vis" timeline...');
+
     const { items, groups, options } = this.computeTimelineArgs();
-    this.timeline = new vis.Timeline(
-      this.timelineDomElement,
-      items,
-      groups,
-      options
-    );
+
+    this.timeline = new vis.Timeline(this.dom.timeline, items, groups, options);
   },
   componentWillUnmount(dimensions) {
     this.timeline.destroy();
@@ -45,13 +51,16 @@ const Timeline = createClass({
   },
   updateTimeline: _.throttle(function() {
     log('Updating the "vis" timeline...');
+
+    const { timeline } = this;
     const { items, groups, options } = this.computeTimelineArgs();
-    this.timeline.setItems(items);
-    this.timeline.setGroups(groups);
-    this.timeline.setOptions(options);
-    this.timeline.fit({
+
+    timeline.setItems(items);
+    timeline.setGroups(groups);
+    timeline.setOptions(options);
+    timeline.fit({
       animation: {
-        duration: 1000,
+        duration: 800,
         easingFunction: 'linear'
       }
     });
@@ -59,6 +68,7 @@ const Timeline = createClass({
   computeTimelineArgs() {
     const { dimensions } = this.state;
     const { items } = this.props;
+
     return {
       options: {
         width: `${dimensions.width}px`,
@@ -67,7 +77,7 @@ const Timeline = createClass({
         showCurrentTime: false,
         moveable: false,
         selectable: false,
-        zoomMin: 60*60*1000,
+        zoomMin: 60 * 60 * 1000,
         stack: true,
         locale: 'en',
         moment: date => moment(date).tz('Europe/Paris'),
@@ -77,7 +87,7 @@ const Timeline = createClass({
           step: 15
         }
       },
-      items: new vis.DataSet(items.map(({ t, slug }, index) => ({
+      items: new DataSet(items.map(({ t, slug }, index) => ({
         id: index,
         title: ITEMS_TOOLTIP[slug],
         content: ITEMS_CONTENT[slug] || slug,
@@ -97,13 +107,12 @@ const Timeline = createClass({
     };
   },
   render() {
-    const { style } = this.props;
     return (
       <Measure onMeasure={ this.setDimensions }>
         <div
           className='Timeline'
-          ref={ domElement => this.timelineDomElement = domElement }
-          style={ style } />
+          ref={ node => this.dom.timeline = node }
+          style={ this.props.style } />
       </Measure>
     );
   }

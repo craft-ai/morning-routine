@@ -1,9 +1,12 @@
-const React = require('react');
-const _ = require('lodash');
-const classnames = require('classnames');
-const { PERSONA_LABEL } = require('../constants');
+import React from 'react';
+import _ from 'lodash';
+import classnames from 'classnames';
+
+import constants from '../constants';
 
 require('./PersonaPicker.css');
+
+const { PERSONA_LABEL } = constants;
 
 const PersonaPicker = ({ personas, selected, onSelectPersona, style }) => (
   <ul className='PersonaPicker' style={ style }>
@@ -22,4 +25,4 @@ const PersonaPicker = ({ personas, selected, onSelectPersona, style }) => (
   </ul>
 );
 
-module.exports = PersonaPicker;
+export default PersonaPicker;

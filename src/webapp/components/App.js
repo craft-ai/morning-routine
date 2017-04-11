@@ -1,29 +1,21 @@
-const _ = require('lodash');
-const React = require('react');
-const createClass = require('create-react-class');
-const { debug } = require('../../utils');
-const {
-  retrievePersonaDecisionTrees,
-  createContext
-} = require('../predictions');
-const {
-  extractLeafs,
-  filterLeafsByContext,
-  computeTimeSinceEvents,
-  computeTimeToEvents,
-  computePartialDecisions,
-  mergeRules,
-  filterDeadLeafsAndRules,
-  getIntervalsUnion,
-  expandContext
-} = require('../decide');
-const constants = require('../constants');
-const Checkbox = require('./Checkbox');
-const ListPicker = require('./ListPicker');
-const PersonaPicker = require('./PersonaPicker');
-const Timeline = require('./Timeline');
+import _ from 'lodash';
+import React from 'react';
+import createClass from 'create-react-class';
 
-const { PERSONA, PROPERTIES, EVENTS, DAYS_OF_WEEK, MONTHS, MORNING_MEETING, VALUES, TIMESTAMPS } = constants;
+import Ribbon from './Ribbon';
+import Checkbox from './Checkbox';
+import ListPicker from './ListPicker';
+import PersonaPicker from './PersonaPicker';
+import Timeline from './Timeline';
+
+import { debug } from '../../utils';
+import constants from '../constants';
+import * as Decision from '../decision';
+import * as Interval from '../interval';
+
+import './App.css';
+
+const { PROPERTIES, EVENTS, DAYS_OF_WEEK, MONTHS, MORNING_MEETING, VALUES, TIMESTAMPS } = constants;
 const { HAPPENING, ON } = VALUES;
 
 const MORNING_MEETING_KEYS = _.keys(MORNING_MEETING);
@@ -41,18 +33,18 @@ function getTime(time) {
   return result;
 }
 
-require('./App.css');
-
 const App = createClass({
   getInitialState() {
+    const personas = constants.PERSONA.map(name => ({ name, leafs: null }));
+
     return {
-      personas: PERSONA.map(name => ({ name, leafs: null })),
+      personas,
       items: null,
       selectedPersona: null,
       selectedDayOfWeek: 2,
       selectedMonth: 3,
-      holiday: false,
-      selectedMorningMeeting: 0
+      selectedMorningMeeting: 0,
+      holiday: false
     };
   },
   componentWillMount() {
@@ -60,30 +52,31 @@ const App = createClass({
     this.state.personas.forEach(({ name }, index) => {
       const log = debug(`persona:${name}`);
 
-      retrievePersonaDecisionTrees(name, TIMESTAMPS.DECEMBER)
-      .then(trees => {
-        const leafs = _.mapValues(trees, (tree, property) => extractLeafs(tree.trees[property], ...OUTPUTS));
+      Decision.retrievePersonaDecisionTrees(name, TIMESTAMPS.DECEMBER)
+        .then(trees => {
+          const leafs = _.mapValues(trees, (tree, property) => {
+            return Interval.extractLeafs(tree.trees[property], ...OUTPUTS);
+          });
 
-        this.setState(_.set(this.state, `personas[${index}].leafs`, leafs));
-      })
-      .then(() => log('Persona ready'))
-      .catch(err => log('Error while preparing persona', err));
+          this.setState(_.set(this.state, `personas[${index}].leafs`, leafs));
+        })
+        .then(() => log('Persona ready'))
+        .catch(error => log('Error while preparing persona', error));
     });
   },
   getItemsFromDecision() {
-    const { selectedPersona, selectedMonth, selectedDayOfWeek, selectedMorningMeeting, personas, holiday } = this.state;
-    const persona = personas.find(({ name }) => name === selectedPersona);
+    const persona = this.state.personas.find(({ name }) => name === this.state.selectedPersona);
 
     if (!persona) {
       return;
     }
 
-    const meeting = MORNING_MEETING_VALUES[selectedMorningMeeting];
+    const meeting = MORNING_MEETING_VALUES[this.state.selectedMorningMeeting];
 
-    let context = createContext(2017, selectedMonth, selectedDayOfWeek);
+    let context = Decision.createContext(2017, this.state.selectedMonth, this.state.selectedDayOfWeek);
     let items = [];
 
-    context.holiday = VALUES[holiday];
+    context.holiday = VALUES[this.state.holiday];
     context.meeting = meeting;
 
     if (meeting > 0) {
@@ -93,12 +86,12 @@ const App = createClass({
     items = PROPERTIES.reduce((items, property) => {
       let leafs = _.cloneDeep(persona.leafs[property]);
 
-      leafs = filterLeafsByContext(leafs, context);
-      leafs = computeTimeSinceEvents(leafs, context);
-      leafs = computeTimeToEvents(leafs, context);
-      leafs = computePartialDecisions(leafs, context);
-      leafs = mergeRules(leafs);
-      leafs = filterDeadLeafsAndRules(leafs);
+      leafs = Interval.filterLeafsByContext(leafs, context);
+      leafs = Interval.computeTimeSinceEvents(leafs, context);
+      leafs = Interval.computeTimeToEvents(leafs, context);
+      leafs = Interval.computePartialDecisions(leafs, context);
+      leafs = Interval.mergeRules(leafs);
+      leafs = Interval.filterDeadLeafsAndRules(leafs);
 
       const [leaf] = leafs;
 
@@ -116,7 +109,7 @@ const App = createClass({
           items.push({ slug: property, t: [getTime(value)] });
         }
       } else {
-        context = expandContext(context, property, leaf);
+        context = Interval.expandContext(context, property, leaf);
 
         const intervals = leafs.reduce((intervals, current) => {
           const values = current.rules.time && current.rules.time['[in['];
@@ -128,7 +121,7 @@ const App = createClass({
           return intervals;
         }, []);
 
-        getIntervalsUnion(intervals).forEach(interval => {
+        Interval.getIntervalsUnion(intervals).forEach(interval => {
           items.push({ slug: property, t: interval.map(getTime) });
         });
       }
@@ -164,27 +157,11 @@ const App = createClass({
     this.setState({ holiday: holiday }, this.getItemsFromDecision);
   },
   render() {
-    const { selectedPersona, selectedDayOfWeek, selectedMonth, selectedMorningMeeting } = this.state;
+    return <div>
+        <Ribbon />
 
-    return (
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        bottom: 0,
-        left: 0,
-        right: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'stretch'
-      }}>
         {
-          this.state.items
-            ? <Timeline
-              items={ this.state.items }
-              style={{
-                flex: '0 0 425px'
-              }} />
-            : null
+          this.state.items && <Timeline items={ this.state.items } />
         }
 
         <div
@@ -204,7 +181,7 @@ const App = createClass({
             <h1>Choose a persona</h1>
             <PersonaPicker
               personas={ this.state.personas }
-              selected={ selectedPersona }
+              selected={ this.state.selectedPersona }
               onSelectPersona={ this.setSelectedPersona } />
           </div>
 
@@ -220,7 +197,7 @@ const App = createClass({
             <h2>Day</h2>
             <ListPicker
               list={ DAYS_OF_WEEK }
-              defaultValue={ selectedDayOfWeek }
+              defaultValue={ this.state.selectedDayOfWeek }
               onSelect={ this.setSelectedDayOfWeek } />
             <Checkbox
               title='Bank holiday?'
@@ -230,19 +207,18 @@ const App = createClass({
             <h2>Meeting</h2>
             <ListPicker
               list={ MORNING_MEETING_KEYS }
-              defaultValue={ selectedMorningMeeting }
+              defaultValue={ this.state.selectedMorningMeeting }
               onSelect={ this.setSelectedMorningMeeting } />
 
             <h2>Month</h2>
             <ListPicker
               list={ MONTHS }
-              defaultValue={ selectedMonth }
+              defaultValue={ this.state.selectedMonth }
               onSelect={ this.setSelectedMonth } />
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
 });
 
-module.exports = App;
+export default App;

@@ -1,0 +1,26 @@
+$side-size: 140px;
+$shadow-size: 5px;
+$diagonal-size: 198px; // ceil($size-size * sqrt(2))
+
+.ribbon_container {
+  position: absolute;
+  top: 0; right: 0;
+  width: $side-size + $shadow-size;
+  height: $side-size + $shadow-size;
+  overflow: hidden;
+}
+
+.ribbon {
+  display: block;
+  position: relative;
+  right: -$shadow-size;
+  transform: rotate(-45deg);
+  transform-origin: top left;
+  z-index: 999;
+
+  img {
+    display: block;
+    height: $diagonal-size;
+    box-shadow: 0 0 $shadow-size 1px rgba(#000, .3);
+  }
+}

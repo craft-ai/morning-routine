@@ -1,9 +1,9 @@
-const React = require('react');
-const Slider = require('rc-slider/lib/Slider');
-const _ = require('lodash');
+import React  from 'react';
+import _  from 'lodash';
+import Slider  from 'rc-slider/lib/Slider';
 
-require('rc-slider/assets/index.css');
-require('./ListPicker.css');
+import 'rc-slider/assets/index.css';
+import './ListPicker.css';
 
 const ListPicker = ({ list, defaultValue, onSelect }) => (
   <Slider 
@@ -17,4 +17,4 @@ const ListPicker = ({ list, defaultValue, onSelect }) => (
     included={ false } />
 );
 
-module.exports = ListPicker;
+export default ListPicker;
