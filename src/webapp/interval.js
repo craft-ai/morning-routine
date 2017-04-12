@@ -3,11 +3,26 @@ require('dotenv').load();
 import _ from 'lodash';
 import debug from 'debug';
 
-const TIME_SINCE_REGEXP = /^time_since_(.+)$/;
-const TIME_TO_REGEXP = /^time_to_(.+)$/;
 const TIME_LOWER_BOUND = 0;
 const TIME_UPPER_BOUND = 24;
 const TIME_DEFAULT_INTERVAL = [TIME_LOWER_BOUND, TIME_UPPER_BOUND];
+
+const COMPUTED_REGEXPS = [
+  { id: 'TIME', type: 'SINCE', value: /^time_since_(.+)$/, check: checkTimeRule },
+  { id: 'TIME', type: 'TO', value: /^time_to_(.+)$/, check: checkTimeRule }
+];
+
+function checkComputedRule(rule, context) {
+  const { check } = rule.computed || {};
+
+  return !(check instanceof Function) || check(rule, context);
+}
+
+function checkTimeRule(rule, context) {
+  const origin = context[rule.computed.ref];
+
+  return (origin >= 0 && origin < 24) || rule.operator !== '<';
+}
 
 function checkRule({ property, operator, operand }, value) {
   switch (operator) {
@@ -52,34 +67,18 @@ function groupConditionsByOperator(rules) {
   }, {});
 }
 
-function computeEventsRelativeProperties(leafs, context, computeInterval, regex) {
-  return leafs.map(leaf => {
-    let [timeToRules, rules] = _.partition(leaf.rules, rule => regex.test(rule.property));
+function computeTimeSinceEvents({ operand, operator }, eventTime) {
+  const value = eventTime + operand / 3600;
+  const interval = [value < 0 ? 0 : value, eventTime];
 
-    leaf.rules = Object
-      .values(_.groupBy(timeToRules, 'property'))
-      .reduce((rules, ruleGroup) => {
-        const conditions = ruleGroup.reduce((conditions, rule) => {
-          const origin = context[rule.property.match(regex)[1]];
+  return operator === '>=' ? interval : interval.reverse();
+}
 
-          if (origin >= 0 && origin < 24) {
-            conditions.push(computeInterval(rule, origin));
-          }
+function computeTimeToEvents({ operand, operator }, eventTime) {
+  const value = eventTime - operand / 3600;
+  const interval = [value < 0 ? 0 : value, eventTime];
 
-          return conditions;
-        }, []);
-
-        const interval = getIntervalsIntersection(conditions);
-
-        if (interval) {
-          rules.push({ property: 'time', operator: '[in[', operand: interval });
-        }
-
-        return rules;
-      }, rules);
-
-    return leaf;
-  });
+  return operator === '>=' ? interval.reverse() : interval;
 }
 
 function getOrientedIntervalsIntersection(intervals) {
@@ -91,6 +90,19 @@ function getOrientedIntervalsIntersection(intervals) {
     Math.max(current[0], interval[0]),
     Math.min(current[1], interval[1])
   ], _.clone(TIME_DEFAULT_INTERVAL));
+}
+
+function expandComputedProperty(decisionRule) {
+  const { property } = decisionRule;
+  const regexp = COMPUTED_REGEXPS.find(({ value }) => value.test(property));
+
+  if (regexp) {
+    decisionRule = Object.assign({
+      computed: Object.assign({ ref: property.match(regexp.value)[1] }, regexp)
+    }, decisionRule);
+  }
+
+  return decisionRule;
 }
 
 function getIntervalsIntersection(conditions) {
@@ -155,7 +167,7 @@ export function extractLeafs(tree, ...outputs) {
     const { predicted_value, children, decision_rule } = tree;
 
     if (decision_rule) {
-      rules.push(decision_rule);
+      rules.push(expandComputedProperty(decision_rule));
     }
 
     if (children) {
@@ -179,8 +191,8 @@ export function filterLeafsByContext(leafs, context) {
 
       const value = context[rule.property];
 
-      if (value === undefined || value instanceof Function) {
-        // Can't apply the rule, I keep it.
+      if ((value === undefined && checkComputedRule(rule, context)) || value instanceof Function) {
+        // Can't apply the rule, I keep it
         rules.push(rule);
         removeLeaf = false;
       } else {
@@ -201,26 +213,37 @@ export function filterLeafsByContext(leafs, context) {
   }, []);
 }
 
-export function computeTimeSinceEvents(leafs, context) {
-  const computeInterval = ({ operand, operator }, eventTime) => {
-    const value = eventTime + operand / 3600;
-    const interval = [value < 0 ? 0 : value, eventTime];
+export function computeEventsRelativeProperties(leafs, context) {
+  return leafs.map(leaf => {
+    let [eventsRelativeRules, rules] = _.partition(leaf.rules, rule => rule.computed && rule.computed.id === 'TIME');
 
-    return operator === '>=' ? interval : interval.reverse();
-  };
+    leaf.rules = Object
+      .values(_.groupBy(eventsRelativeRules, 'property'))
+      .reduce((rules, ruleGroup) => {
+        const conditions = ruleGroup.reduce((conditions, rule) => {
+          const { computed } = rule;
+          const origin = context[computed.ref];
 
-  return computeEventsRelativeProperties(leafs, context, computeInterval, TIME_SINCE_REGEXP);
-}
+          if (origin >= 0 && origin < 24) {
+            const computeInterval = computed.type === 'SINCE' ? computeTimeSinceEvents : computeTimeToEvents;
 
-export function computeTimeToEvents(leafs, context) {
-  const computeInterval = ({ operand, operator }, eventTime) => {
-    const value = eventTime - operand / 3600;
-    const interval = [value < 0 ? 0 : value, eventTime];
+            conditions.push(computeInterval(rule, origin));
+          }
 
-    return operator === '>=' ? interval.reverse() : interval;
-  };
+          return conditions;
+        }, []);
 
-  return computeEventsRelativeProperties(leafs, context, computeInterval, TIME_TO_REGEXP);
+        const interval = getIntervalsIntersection(conditions);
+
+        if (interval) {
+          rules.push({ property: 'time', operator: '[in[', operand: interval });
+        }
+
+        return rules;
+      }, rules);
+
+    return leaf;
+  });
 }
 
 export function computePartialDecisions(leafs, context) {
@@ -230,7 +253,7 @@ export function computePartialDecisions(leafs, context) {
 
       if (compute instanceof Function) {
         const value = compute(rule.operand);
-        
+
         if (value && value.length) {
           rules.push(...value);
         }
@@ -245,13 +268,13 @@ export function computePartialDecisions(leafs, context) {
   });
 }
 
-export function getIntervalsUnion(intervals) {
+export function getIntervalsUnion(intervals, precision = 0) {
   return intervals
     .sort(([a], [b]) => a - b)
     .reduce((intervals, current) => {
       const last = _.last(intervals);
 
-      if (!last || last[1] < current[0]) {
+      if (!last || current[0] - last[1] > precision) {
         intervals.push(current);
       } else {
         last[1] = current[1];

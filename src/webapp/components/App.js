@@ -21,6 +21,7 @@ const { HAPPENING, ON } = VALUES;
 const MORNING_MEETING_KEYS = _.keys(MORNING_MEETING);
 const MORNING_MEETING_VALUES = _.values(MORNING_MEETING);
 const OUTPUTS = [HAPPENING, ON];
+const TIME_PRECISION = 1e-6;
 
 const log = debug();
 
@@ -87,8 +88,7 @@ const App = createClass({
       let leafs = _.cloneDeep(persona.leafs[property]);
 
       leafs = Interval.filterLeafsByContext(leafs, context);
-      leafs = Interval.computeTimeSinceEvents(leafs, context);
-      leafs = Interval.computeTimeToEvents(leafs, context);
+      leafs = Interval.computeEventsRelativeProperties(leafs, context);
       leafs = Interval.computePartialDecisions(leafs, context);
       leafs = Interval.mergeRules(leafs);
       leafs = Interval.filterDeadLeafsAndRules(leafs);
@@ -121,9 +121,10 @@ const App = createClass({
           return intervals;
         }, []);
 
-        Interval.getIntervalsUnion(intervals).forEach(interval => {
-          items.push({ slug: property, t: interval.map(getTime) });
-        });
+        Interval
+          .getIntervalsUnion(intervals, TIME_PRECISION)
+          .filter(interval => interval[1] - interval[0] > TIME_PRECISION)
+          .forEach(interval => items.push({ slug: property, t: interval.map(getTime) }));
       }
 
       return items;
